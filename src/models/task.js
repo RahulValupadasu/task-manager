@@ -6,7 +6,8 @@ const validator = require('validator');
 const task = mongoose.model('task',{
     name:{
         type:String,
-        required:true
+        required:true,
+        trim:true
     },
     description:{
         type:String,
