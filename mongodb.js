@@ -59,13 +59,13 @@ MongoClient.connect(connectionURL,{useNewUrlParser:true},(error,client)=>{
 
 //DELETE Operation
 
-db.collection('newUsers').deleteMany({
-   name:'Rishi'
-}).then((result)=>{
-   console.log(result)
-}).catch((error)=>{
-   console.log(error)
-});
+// db.collection('newUsers').deleteMany({
+//    name:'Rishi'
+// }).then((result)=>{
+//    console.log(result)
+// }).catch((error)=>{
+//    console.log(error)
+// });
 
 
 

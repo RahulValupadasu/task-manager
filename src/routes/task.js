@@ -1,10 +1,15 @@
 const express = require('express');
-const router = new express.Router();
 const Task = require('../models/task');
+const router = new express.Router();
+
+const auth = require('../middleware/authentication');
 
 //CREATE route for tasks creation
-router.post('/tasks', async (req,res)=>{
-    const task = new Task(req.body);
+router.post('/tasks', auth, async (req,res)=>{
+    const task = new Task({
+        ...req.body,
+        owner:req.user._id
+    });
         //modifying the code using async and await
         try{
             await task.save()
@@ -26,11 +31,11 @@ router.post('/tasks', async (req,res)=>{
 })
 
 
-//READING all the tasks-- route
-router.get('/tasks', async (req,res)=>{
+//READING all the tasks of the user-- route
+router.get('/tasks', auth, async (req,res)=>{
     //modifying the code using async and await
     try{
-        const task = await Task.find({})
+        const task = await Task.find({owner: req.user._id});
         res.status(200).send(task);
     }
     catch(e){
@@ -50,9 +55,10 @@ router.get('/tasks', async (req,res)=>{
 //READING task based on given task id-- route
 // :name is the dynamic parameter to be sent to the end point, 
 // req.params is used to 
-router.get('/tasks/:name', async(req,res)=>{
-    try{      
-        const task = await Task.find({name:req.params.name});
+router.get('/tasks/:name', auth, async(req,res)=>{
+    try{  
+            
+        const task = await Task.findOne({name:req.params.name,owner:req.user._id});
         if(task.length==0){
             console.log("No tasks found with this task name");
             return res.status(404).send();
@@ -83,7 +89,7 @@ router.get('/tasks/:name', async(req,res)=>{
 
 
 //Updating  Tasks
-router.patch('/tasks/:id', async (req,res)=>{
+router.patch('/tasks/:id',auth, async (req,res)=>{
       const updates = Object.keys(req.body);
       const allowUpdates = ['completed','name','description'];
       const isValidUPdate = updates.every((update)=>{
@@ -93,18 +99,25 @@ router.patch('/tasks/:id', async (req,res)=>{
           return res.send({"error":"Invalid Update!!"});
       }
       try{
-           const task = await Task.findOneAndUpdate(req.params.id,req.body,{new:true,runValidators:true});
-           res.status(200).send(task);
-      }catch{
+          console.log("Entered into try block")
+        //    const task = await Task.findOne({_id:mongoose.Types.ObjectId(req.params.id),owner:req.user._id},req.body,{new:true,runValidators:true});
+        const task = await Task.findOne({_id:req.params.id,owner:req.user._id});
+        if(!task){
+            res.status(404).send({"Error":"No task found"})
+        } 
+        updates.forEach((update)=>task[update]=req.body[update]);
+        await task.save();
+        res.status(200).send(task);
+      }catch(e){
           res.status(500).send(e);
       }
 
 });
 
 //Deleting task
-router.delete('/tasks/:id',async (req,res)=>{
+router.delete('/tasks/:id',auth,async (req,res)=>{
     try{
-        const deletedTask = Task.findByIdAndDelete(req.params.id);
+        const deletedTask = await Task.findOneAndDelete({_id: req.params.id,owner: req.user._id});
         if(!deletedTask){
             return res.status(404).send({"ERROR":"0 documents found by this id"});
         }

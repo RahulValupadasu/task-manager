@@ -11,9 +11,21 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 //app.use -> to cutsomise our server
+//using middleware to setup for maintancecode
+
+// app.use((req,res,next)=>{
+//       res.status(503).send("Site under maintaince, please vist us back later in few minutes, thanks")
+// });
+
+app.use('/tasks',(req,res,next)=>{
+    
+    
+    next()
+})
+
 //express.json()-> parses incoming JSON to javscript OBJECT automatically
-//app.use(userRouter) is use to use userRouter exported from user router
 app.use(express.json());
+//app.use(userRouter) is use to use userRouter exported from user router
 app.use(userRouter);
 app.use(taskRouter);
 
